@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flock Safety — Transportation ROI Calculator</title>
+<style>
+  :root {
+    --flock-dark: #1a1a2e;
+    --flock-blue: #0f3460;
+    --flock-accent: #e94560;
+    --flock-light: #f5f5f7;
+    --flock-green: #2ecc71;
+    --flock-orange: #f39c12;
+    --card-bg: #ffffff;
+    --border: #e0e0e0;
+    --text: #333;
+    --text-light: #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--flock-light);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--flock-dark), var(--flock-blue));
+    color: white;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.25rem; }
+  header p { opacity: 0.8; font-size: 0.95rem; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 0.75rem 1.25rem;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { border-color: var(--flock-blue); }
+  .tab.active {
+    background: var(--flock-blue);
+    color: white;
+    border-color: var(--flock-blue);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--flock-dark);
+    border-bottom: 2px solid var(--flock-accent);
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+    margin: 1rem 0 0.5rem;
+    color: var(--flock-blue);
+  }
+
+  /* Form inputs */
+  .input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-item { display: flex; flex-direction: column; }
+
+  .input-item label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-item input, .input-item select {
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .input-item input:focus, .input-item select:focus {
+    outline: none;
+    border-color: var(--flock-blue);
+  }
+
+  /* Results */
+  .results {
+    background: linear-gradient(135deg, #f8f9fa, #e8f4f8);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .results h3 {
+    margin: 0 0 1rem;
+    color: var(--flock-dark);
+    font-size: 1.1rem;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .result-box {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .result-box .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  .result-box .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+  }
+
+  .result-box .detail {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .savings { color: var(--flock-green); }
+  .cost { color: var(--flock-accent); }
+  .neutral { color: var(--flock-blue); }
+
+  /* Comparison bar */
+  .comparison-bar {
+    margin-top: 1rem;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .bar-label {
+    width: 120px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 28px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    transition: width 0.4s ease;
+    min-width: 60px;
+  }
+
+  .bar-fill.legacy { background: var(--flock-accent); }
+  .bar-fill.flock { background: var(--flock-green); }
+
+  /* Talking points */
+  .talking-points {
+    margin-top: 1rem;
+    background: #fffdf0;
+    border: 1px solid #f0e6b0;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .talking-points h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--flock-orange);
+    margin-bottom: 0.5rem;
+  }
+
+  .talking-points ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .talking-points li {
+    font-size: 0.9rem;
+    padding: 0.35rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+  }
+
+  .talking-points li::before {
+    content: ">";
+    position: absolute;
+    left: 0;
+    color: var(--flock-orange);
+    font-weight: 700;
+  }
+
+  /* Summary */
+  .summary-section { display: none; }
+  .summary-section.visible { display: block; }
+
+  .deal-total {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--flock-dark), var(--flock-blue));
+    border-radius: 12px;
+    color: white;
+    margin-top: 1rem;
+  }
+
+  .deal-total .amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+  }
+
+  .deal-total .sub {
+    opacity: 0.7;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+
+  .product-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .product-summary-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+  }
+
+  .product-summary-item .prod-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--flock-blue);
+  }
+
+  .product-summary-item .prod-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--flock-dark);
+  }
+
+  .product-summary-item .prod-detail {
+    font-size: 0.8rem;
+    color: var(--text-light);
+  }
+
+  /* Section visibility */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Print */
+  @media print {
+    header { padding: 1rem; }
+    .tabs { display: none; }
+    .section { display: block !important; page-break-inside: avoid; }
+    .summary-section { display: block !important; }
+  }
+
+  @media (max-width: 600px) {
+    .input-group { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    .product-summary { grid-template-columns: 1fr; }
+    .tabs { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Flock Safety — Transportation ROI Calculator</h1>
+  <p>Quantify the value for State DOTs & MPOs</p>
+</header>
+
+<div class="container">
+
+  <!-- Agency Info -->
+  <div class="card">
+    <div class="input-group">
+      <div class="input-item">
+        <label>Agency Name</label>
+        <input type="text" id="agencyName" placeholder="e.g., Ohio DOT" oninput="updateAll()">
+      </div>
+      <div class="input-item">
+        <label>State</label>
+        <input type="text" id="stateName" placeholder="e.g., Ohio" oninput="updateAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('ta')">Traffic Analytics</div>
+    <div class="tab" onclick="showTab('wwd')">Wrong-Way Driving</div>
+    <div class="tab" onclick="showTab('dfr')">Drone (DFR)</div>
+    <div class="tab" onclick="showTab('solar')">Solar PTZ / LPR</div>
+    <div class="tab" onclick="showTab('summary')">Deal Summary</div>
+  </div>
+
+  <!-- TA Section -->
+  <div class="section active" id="section-ta">
+    <div class="card">
+      <h2>Traffic Analytics vs. Traditional Count Programs</h2>
+
+      <h3>Current Count Program</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Total lane-miles managed</label>
+          <input type="number" id="taLaneMiles" value="25000" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Permanent count stations</label>
+          <input type="number" id="taPermanentStations" value="150" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Short-term counts per year</label>
+          <input type="number" id="taShortTermCounts" value="200" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Cost per short-term count ($)</label>
+          <input type="number" id="taCostPerCount" value="1000" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Annual count program budget ($)</label>
+          <input type="number" id="taAnnualBudget" value="250000" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Technician FTEs for count program</label>
+          <input type="number" id="taTechnicianFTEs" value="3" step="0.5" oninput="calcTA()">
+        </div>
+      </div>
+
+      <h3>Flock TA Platform</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Flock cameras in state</label>
+          <input type="number" id="taFlockCameras" value="500" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>TA subscription price ($/year)</label>
+          <input type="number" id="taPlatformPrice" value="40000" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>MS2 integration add-on ($)</label>
+          <input type="number" id="taMS2Price" value="15000" oninput="calcTA()">
+        </div>
+        <div class="input-item">
+          <label>Agency uses MS2?</label>
+          <select id="taUsesMS2" onchange="calcTA()">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="results" id="taResults"></div>
+    </div>
+  </div>
+
+  <!-- WWD Section -->
+  <div class="section" id="section-wwd">
+    <div class="card">
+      <h2>Wrong-Way Driving: Flock vs. Legacy Infrastructure</h2>
+
+      <h3>Agency Wrong-Way Exposure</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Total high-risk ramps</label>
+          <input type="number" id="wwdTotalRamps" value="200" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Currently protected ramps</label>
+          <input type="number" id="wwdProtectedRamps" value="12" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Wrong-way incidents (past 3 yrs)</label>
+          <input type="number" id="wwdIncidents" value="45" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Wrong-way fatalities (past 3 yrs)</label>
+          <input type="number" id="wwdFatalities" value="8" oninput="calcWWD()">
+        </div>
+      </div>
+
+      <h3>Cost Comparison</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Legacy system cost per site ($)</label>
+          <input type="number" id="wwdLegacyCost" value="100000" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Flock cost per site per year ($)</label>
+          <input type="number" id="wwdFlockCost" value="15000" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Target sites for deployment</label>
+          <input type="number" id="wwdTargetSites" value="20" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Legacy deployment time (months)</label>
+          <input type="number" id="wwdLegacyDeployMonths" value="12" oninput="calcWWD()">
+        </div>
+      </div>
+
+      <h3>Economic Impact</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>FHWA value of statistical life ($M)</label>
+          <input type="number" id="wwdVSL" value="12.5" step="0.1" oninput="calcWWD()">
+        </div>
+        <div class="input-item">
+          <label>Avg crash cost — non-fatal ($)</label>
+          <input type="number" id="wwdCrashCost" value="500000" oninput="calcWWD()">
+        </div>
+      </div>
+
+      <div class="results" id="wwdResults"></div>
+    </div>
+  </div>
+
+  <!-- DFR Section -->
+  <div class="section" id="section-dfr">
+    <div class="card">
+      <h2>Drone as First Responder vs. Traditional Patrol</h2>
+
+      <h3>Current Incident Response</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Avg incidents per day</label>
+          <input type="number" id="dfrIncidentsPerDay" value="15" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Avg time to first visual (min)</label>
+          <input type="number" id="dfrCurrentResponseMin" value="15" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Patrol vehicle annual cost ($)</label>
+          <input type="number" id="dfrPatrolCost" value="100000" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Cost per minute of lane blockage ($)</label>
+          <input type="number" id="dfrLaneBlockageCost" value="150" oninput="calcDFR()">
+        </div>
+      </div>
+
+      <h3>Flock DFR Deployment</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Number of drones</label>
+          <input type="number" id="dfrDroneCount" value="2" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Drone cost per year ($)</label>
+          <input type="number" id="dfrDroneCost" value="125000" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Drone response time (min)</label>
+          <input type="number" id="dfrDroneResponseMin" value="4" oninput="calcDFR()">
+        </div>
+        <div class="input-item">
+          <label>Solar PTZ cameras to pair</label>
+          <input type="number" id="dfrPTZCount" value="10" oninput="calcDFR()">
+        </div>
+      </div>
+
+      <div class="results" id="dfrResults"></div>
+    </div>
+  </div>
+
+  <!-- Solar Section -->
+  <div class="section" id="section-solar">
+    <div class="card">
+      <h2>Solar PTZ & LPR Camera Bundles</h2>
+
+      <h3>Solar PTZ Cameras ($5K/cam/year)</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Number of PTZ cameras</label>
+          <input type="number" id="solarPTZCount" value="10" oninput="calcSolar()">
+        </div>
+        <div class="input-item">
+          <label>PTZ price per camera per year ($)</label>
+          <input type="number" id="solarPTZPrice" value="5000" oninput="calcSolar()">
+        </div>
+      </div>
+
+      <h3>Solar LPR Cameras ($3K/cam/year)</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Number of LPR cameras</label>
+          <input type="number" id="solarLPRCount" value="15" oninput="calcSolar()">
+        </div>
+        <div class="input-item">
+          <label>LPR price per camera per year ($)</label>
+          <input type="number" id="solarLPRPrice" value="3000" oninput="calcSolar()">
+        </div>
+      </div>
+
+      <h3>Traditional Alternative</h3>
+      <div class="input-group">
+        <div class="input-item">
+          <label>Wired camera install cost ($)</label>
+          <input type="number" id="solarWiredCost" value="15000" oninput="calcSolar()">
+        </div>
+        <div class="input-item">
+          <label>Annual maintenance per wired cam ($)</label>
+          <input type="number" id="solarWiredMaint" value="2000" oninput="calcSolar()">
+        </div>
+      </div>
+
+      <div class="results" id="solarResults"></div>
+    </div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="section" id="section-summary">
+    <div class="card">
+      <h2>Total Deal Summary</h2>
+      <div id="summaryContent"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function fmtM(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
+  return fmt(n);
+}
+
+function pct(n) {
+  return (n * 100).toFixed(1) + '%';
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('section-' + tab).classList.add('active');
+  if (tab === 'summary') calcSummary();
+}
+
+// ── Traffic Analytics ──
+function calcTA() {
+  const laneMiles = +document.getElementById('taLaneMiles').value || 0;
+  const permStations = +document.getElementById('taPermanentStations').value || 0;
+  const shortTermCounts = +document.getElementById('taShortTermCounts').value || 0;
+  const costPerCount = +document.getElementById('taCostPerCount').value || 0;
+  const annualBudget = +document.getElementById('taAnnualBudget').value || 0;
+  const techFTEs = +document.getElementById('taTechnicianFTEs').value || 0;
+  const flockCams = +document.getElementById('taFlockCameras').value || 0;
+  const platformPrice = +document.getElementById('taPlatformPrice').value || 0;
+  const ms2Price = +document.getElementById('taMS2Price').value || 0;
+  const usesMS2 = document.getElementById('taUsesMS2').value === 'yes';
+
+  const totalCurrentSites = permStations + shortTermCounts;
+  const currentCoverage = laneMiles > 0 ? totalCurrentSites / laneMiles : 0;
+  const flockCoverage = laneMiles > 0 ? (totalCurrentSites + flockCams) / laneMiles : 0;
+  const coverageMultiplier = totalCurrentSites > 0 ? (totalCurrentSites + flockCams) / totalCurrentSites : 0;
+
+  const shortTermSpend = shortTermCounts * costPerCount;
+  const techCostEstimate = techFTEs * 75000;
+  const countsThatFlockReplaces = Math.min(shortTermCounts, Math.floor(platformPrice / costPerCount));
+
+  const flockTotal = platformPrice + (usesMS2 ? ms2Price : 0);
+  const costPerSiteTraditional = shortTermCounts > 0 ? shortTermSpend / shortTermCounts : 0;
+  const costPerSiteFlock = flockCams > 0 ? flockTotal / flockCams : 0;
+
+  const maxBar = Math.max(shortTermSpend, flockTotal, 1);
+
+  let html = `<h3>Analysis</h3>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">Current Network Coverage</div>
+        <div class="value neutral">${pct(currentCoverage)}</div>
+        <div class="detail">${totalCurrentSites.toLocaleString()} sites / ${laneMiles.toLocaleString()} lane-miles</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Coverage with Flock TA</div>
+        <div class="value savings">${pct(flockCoverage)}</div>
+        <div class="detail">${(totalCurrentSites + flockCams).toLocaleString()} sites — ${coverageMultiplier.toFixed(1)}x increase</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Annual Short-Term Count Spend</div>
+        <div class="value cost">${fmt(shortTermSpend)}</div>
+        <div class="detail">${shortTermCounts} counts x ${fmt(costPerCount)} each</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Flock TA Annual Cost</div>
+        <div class="value savings">${fmt(flockTotal)}</div>
+        <div class="detail">Platform${usesMS2 ? ' + MS2 integration' : ''} — ${flockCams} continuous sites</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Cost per Site — Traditional</div>
+        <div class="value cost">${fmt(costPerSiteTraditional)}</div>
+        <div class="detail">Per short-term count deployment</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Cost per Site — Flock</div>
+        <div class="value savings">${fmt(costPerSiteFlock)}</div>
+        <div class="detail">Per continuous monitoring location</div>
+      </div>
+    </div>
+
+    <div class="comparison-bar">
+      <div class="bar-row">
+        <div class="bar-label">Tube Counts</div>
+        <div class="bar-track">
+          <div class="bar-fill legacy" style="width:${(shortTermSpend / maxBar * 100).toFixed(1)}%">${fmt(shortTermSpend)}</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Flock TA</div>
+        <div class="bar-track">
+          <div class="bar-fill flock" style="width:${(flockTotal / maxBar * 100).toFixed(1)}%">${fmt(flockTotal)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="talking-points">
+      <h4>Talking Points</h4>
+      <ul>
+        <li>"Your count program covers ${pct(currentCoverage)} of your network. Flock gives you ${pct(flockCoverage)} — a ${coverageMultiplier.toFixed(1)}x increase — for ${fmt(flockTotal)}/year."</li>
+        <li>"You spend ${fmt(shortTermSpend)}/year on ${shortTermCounts} short-term counts. Flock provides continuous 24/7/365 data at ${flockCams} locations for ${fmt(flockTotal)}."</li>
+        <li>"At ${fmt(costPerSiteTraditional)} per tube count vs. ${fmt(costPerSiteFlock)} per Flock site, you get ${(costPerSiteTraditional / Math.max(costPerSiteFlock, 1)).toFixed(0)}x more value per dollar."</li>
+        <li>"${pct(1 - currentCoverage)} of your network is blind. What decisions are you making on those corridors?"</li>
+        ${usesMS2 ? '<li>"MS2 integration auto-polls and pushes data directly — eliminates manual upload entirely."</li>' : ''}
+      </ul>
+    </div>`;
+
+  document.getElementById('taResults').innerHTML = html;
+}
+
+// ── Wrong-Way Driving ──
+function calcWWD() {
+  const totalRamps = +document.getElementById('wwdTotalRamps').value || 0;
+  const protectedRamps = +document.getElementById('wwdProtectedRamps').value || 0;
+  const incidents = +document.getElementById('wwdIncidents').value || 0;
+  const fatalities = +document.getElementById('wwdFatalities').value || 0;
+  const legacyCost = +document.getElementById('wwdLegacyCost').value || 0;
+  const flockCost = +document.getElementById('wwdFlockCost').value || 0;
+  const targetSites = +document.getElementById('wwdTargetSites').value || 0;
+  const legacyMonths = +document.getElementById('wwdLegacyDeployMonths').value || 0;
+  const vsl = (+document.getElementById('wwdVSL').value || 0) * 1000000;
+  const crashCost = +document.getElementById('wwdCrashCost').value || 0;
+
+  const unprotectedPct = totalRamps > 0 ? (totalRamps - protectedRamps) / totalRamps : 0;
+  const legacyTotal = targetSites * legacyCost;
+  const flockAnnual = targetSites * flockCost;
+  const legacyEquivSites = flockAnnual > 0 ? Math.floor(legacyTotal / flockCost) : 0;
+  const flockEquivSites = legacyCost > 0 ? Math.floor(legacyCost / flockCost) : 0;
+  const fiveYearLegacy = legacyTotal;
+  const fiveYearFlock = flockAnnual * 5;
+  const annualFatalities = fatalities / 3;
+  const annualIncidents = incidents / 3;
+  const annualEconomicLoss = (annualFatalities * vsl) + ((annualIncidents - annualFatalities) * crashCost);
+  const allRampsFlockAnnual = totalRamps * flockCost;
+
+  const maxBar = Math.max(legacyTotal, flockAnnual, 1);
+
+  let html = `<h3>Analysis</h3>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">Ramps Unprotected</div>
+        <div class="value cost">${pct(unprotectedPct)}</div>
+        <div class="detail">${totalRamps - protectedRamps} of ${totalRamps} high-risk ramps exposed</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Annual Wrong-Way Fatalities</div>
+        <div class="value cost">${annualFatalities.toFixed(1)}</div>
+        <div class="detail">${annualIncidents.toFixed(0)} incidents/year — ${fatalities} fatalities in 3 years</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Legacy Cost (${targetSites} sites)</div>
+        <div class="value cost">${fmtM(legacyTotal)}</div>
+        <div class="detail">${fmt(legacyCost)} capital per site — ${legacyMonths} month deploy</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Flock Cost (${targetSites} sites/year)</div>
+        <div class="value savings">${fmtM(flockAnnual)}</div>
+        <div class="detail">${fmt(flockCost)}/site/yr — deploy in 48 hours</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Sites for Same CapEx Budget</div>
+        <div class="value savings">${legacyEquivSites} sites</div>
+        <div class="detail">Flock sites deployable for the legacy cost of ${targetSites} sites</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Annual Economic Loss</div>
+        <div class="value cost">${fmtM(annualEconomicLoss)}</div>
+        <div class="detail">FHWA VSL + crash costs from wrong-way events</div>
+      </div>
+    </div>
+
+    <div class="comparison-bar">
+      <div class="bar-row">
+        <div class="bar-label">Legacy CapEx</div>
+        <div class="bar-track">
+          <div class="bar-fill legacy" style="width:100%">${fmtM(legacyTotal)}</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Flock (Year 1)</div>
+        <div class="bar-track">
+          <div class="bar-fill flock" style="width:${(flockAnnual / Math.max(legacyTotal, 1) * 100).toFixed(1)}%">${fmtM(flockAnnual)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="talking-points">
+      <h4>Talking Points</h4>
+      <ul>
+        <li>"You have ${totalRamps} high-risk ramps and ${protectedRamps} protected. That's ${pct(unprotectedPct)} unprotected. At ${fmt(legacyCost)}/site legacy, protecting all ${totalRamps} costs ${fmtM(totalRamps * legacyCost)}. With Flock: ${fmtM(allRampsFlockAnnual)}/year."</li>
+        <li>"For the capital cost of ${targetSites} legacy sites, you could protect ${legacyEquivSites} ramps with Flock. Which actually solves the problem?"</li>
+        <li>"For every one of their sites, you get ${flockEquivSites} Flock sites. And every Flock site also collects continuous traffic data."</li>
+        <li>"Wrong-way crashes have a 27x higher fatality rate. Your state has averaged ${annualFatalities.toFixed(1)} fatalities and ${fmtM(annualEconomicLoss)} in economic loss per year."</li>
+        <li>"Flock deploys in 48 hours. No construction, no permits, no lane closures. Their system takes ${legacyMonths} months."</li>
+        <li>"Every WWD device is also a permanent traffic monitoring station — count, class, speed. Two solutions, one price."</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('wwdResults').innerHTML = html;
+}
+
+// ── DFR ──
+function calcDFR() {
+  const incidentsPerDay = +document.getElementById('dfrIncidentsPerDay').value || 0;
+  const currentResponse = +document.getElementById('dfrCurrentResponseMin').value || 0;
+  const patrolCost = +document.getElementById('dfrPatrolCost').value || 0;
+  const laneBlockageCost = +document.getElementById('dfrLaneBlockageCost').value || 0;
+  const droneCount = +document.getElementById('dfrDroneCount').value || 0;
+  const droneCost = +document.getElementById('dfrDroneCost').value || 0;
+  const droneResponse = +document.getElementById('dfrDroneResponseMin').value || 0;
+  const ptzCount = +document.getElementById('dfrPTZCount').value || 0;
+  const ptzPrice = 5000;
+
+  const annualIncidents = incidentsPerDay * 365;
+  const timeSavedPerIncident = currentResponse - droneResponse;
+  const annualMinutesSaved = timeSavedPerIncident * annualIncidents;
+  const annualDelaySavings = annualMinutesSaved * laneBlockageCost;
+  const dfrTotalCost = (droneCount * droneCost) + (ptzCount * ptzPrice);
+  const equivalentPatrols = dfrTotalCost > 0 ? Math.floor(dfrTotalCost / patrolCost) : 0;
+  const roi = dfrTotalCost > 0 ? annualDelaySavings / dfrTotalCost : 0;
+
+  const maxBar = Math.max(equivalentPatrols * patrolCost, dfrTotalCost, 1);
+
+  let html = `<h3>Analysis</h3>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">Response Time Reduction</div>
+        <div class="value savings">${timeSavedPerIncident} min faster</div>
+        <div class="detail">${currentResponse} min (patrol) vs. ${droneResponse} min (drone)</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Annual Time Saved</div>
+        <div class="value savings">${(annualMinutesSaved / 60).toFixed(0)} hours</div>
+        <div class="detail">${annualIncidents.toLocaleString()} incidents x ${timeSavedPerIncident} min saved</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Annual Delay Cost Savings</div>
+        <div class="value savings">${fmtM(annualDelaySavings)}</div>
+        <div class="detail">At ${fmt(laneBlockageCost)}/min of lane blockage</div>
+      </div>
+      <div class="result-box">
+        <div class="label">DFR Total Annual Cost</div>
+        <div class="value neutral">${fmtM(dfrTotalCost)}</div>
+        <div class="detail">${droneCount} drones + ${ptzCount} PTZ cameras</div>
+      </div>
+      <div class="result-box">
+        <div class="label">ROI</div>
+        <div class="value savings">${roi.toFixed(1)}x</div>
+        <div class="detail">Delay savings / DFR investment</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Patrol Vehicle Equivalent</div>
+        <div class="value neutral">${equivalentPatrols} vehicles</div>
+        <div class="detail">At ${fmt(patrolCost)}/vehicle/year — covering 1/10th the area</div>
+      </div>
+    </div>
+
+    <div class="comparison-bar">
+      <div class="bar-row">
+        <div class="bar-label">${equivalentPatrols} Patrol Vehicles</div>
+        <div class="bar-track">
+          <div class="bar-fill legacy" style="width:100%">${fmtM(equivalentPatrols * patrolCost)}</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Flock DFR</div>
+        <div class="bar-track">
+          <div class="bar-fill flock" style="width:${(dfrTotalCost / Math.max(equivalentPatrols * patrolCost, 1) * 100).toFixed(1)}%">${fmtM(dfrTotalCost)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="talking-points">
+      <h4>Talking Points</h4>
+      <ul>
+        <li>"Today you detect an incident and wait ${currentResponse} minutes for patrol. With Drone Alpha: airborne in 90 seconds, on-scene in ${droneResponse} minutes with live video, thermal, and 30x zoom."</li>
+        <li>"That's ${timeSavedPerIncident} minutes saved per incident. Across ${annualIncidents.toLocaleString()} annual incidents, that's ${(annualMinutesSaved / 60).toFixed(0)} hours of faster response."</li>
+        <li>"At ${fmt(laneBlockageCost)}/min of lane blockage, faster verification saves ${fmtM(annualDelaySavings)}/year — a ${roi.toFixed(1)}x return on ${fmtM(dfrTotalCost)}."</li>
+        <li>"Audio crash detection within 1,500 ft triggers autonomous launch. Drone is overhead before anyone dials 911."</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('dfrResults').innerHTML = html;
+}
+
+// ── Solar ──
+function calcSolar() {
+  const ptzCount = +document.getElementById('solarPTZCount').value || 0;
+  const ptzPrice = +document.getElementById('solarPTZPrice').value || 0;
+  const lprCount = +document.getElementById('solarLPRCount').value || 0;
+  const lprPrice = +document.getElementById('solarLPRPrice').value || 0;
+  const wiredCost = +document.getElementById('solarWiredCost').value || 0;
+  const wiredMaint = +document.getElementById('solarWiredMaint').value || 0;
+
+  const totalCams = ptzCount + lprCount;
+  const flockAnnual = (ptzCount * ptzPrice) + (lprCount * lprPrice);
+  const wiredCapEx = totalCams * wiredCost;
+  const wiredAnnualMaint = totalCams * wiredMaint;
+  const wiredYear1 = wiredCapEx + wiredAnnualMaint;
+  const fiveYearFlock = flockAnnual * 5;
+  const fiveYearWired = wiredCapEx + (wiredAnnualMaint * 5);
+
+  const maxBar5 = Math.max(fiveYearFlock, fiveYearWired, 1);
+
+  let html = `<h3>Analysis</h3>
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="label">Flock Solar Annual Cost</div>
+        <div class="value savings">${fmtM(flockAnnual)}</div>
+        <div class="detail">${ptzCount} PTZ (${fmt(ptzPrice)}/ea) + ${lprCount} LPR (${fmt(lprPrice)}/ea)</div>
+      </div>
+      <div class="result-box">
+        <div class="label">Wired Alternative Year 1</div>
+        <div class="value cost">${fmtM(wiredYear1)}</div>
+        <div class="detail">${fmtM(wiredCapEx)} install + ${fmtM(wiredAnnualMaint)} maintenance</div>
+      </div>
+      <div class="result-box">
+        <div class="label">5-Year TCO — Flock</div>
+        <div class="value savings">${fmtM(fiveYearFlock)}</div>
+        <div class="detail">OpEx, no install, includes upgrades</div>
+      </div>
+      <div class="result-box">
+        <div class="label">5-Year TCO — Wired</div>
+        <div class="value cost">${fmtM(fiveYearWired)}</div>
+        <div class="detail">CapEx + 5 years maintenance</div>
+      </div>
+    </div>
+
+    <div class="comparison-bar">
+      <div class="bar-row">
+        <div class="bar-label">Wired (5-year)</div>
+        <div class="bar-track">
+          <div class="bar-fill legacy" style="width:${(fiveYearWired / maxBar5 * 100).toFixed(1)}%">${fmtM(fiveYearWired)}</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Flock (5-year)</div>
+        <div class="bar-track">
+          <div class="bar-fill flock" style="width:${(fiveYearFlock / maxBar5 * 100).toFixed(1)}%">${fmtM(fiveYearFlock)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="talking-points">
+      <h4>Talking Points</h4>
+      <ul>
+        <li>"Solar cameras deploy anywhere — no power runs, no fiber, no construction permits. Just mount and connect."</li>
+        <li>"${totalCams} wired cameras: ${fmtM(wiredCapEx)} in installation plus ${fmtM(wiredAnnualMaint)}/year. Flock solar: ${fmtM(flockAnnual)}/year, all-in."</li>
+        <li>"Over 5 years, you save ${fmtM(fiveYearWired - fiveYearFlock)} — and get hardware upgrades included."</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('solarResults').innerHTML = html;
+}
+
+// ── Summary ──
+function calcSummary() {
+  const agency = document.getElementById('agencyName').value || 'Agency';
+  const state = document.getElementById('stateName').value || 'State';
+
+  const taPrice = +document.getElementById('taPlatformPrice').value || 0;
+  const ms2Price = +document.getElementById('taMS2Price').value || 0;
+  const usesMS2 = document.getElementById('taUsesMS2').value === 'yes';
+  const taTotal = taPrice + (usesMS2 ? ms2Price : 0);
+
+  const wwdSites = +document.getElementById('wwdTargetSites').value || 0;
+  const wwdCost = +document.getElementById('wwdFlockCost').value || 0;
+  const wwdTotal = wwdSites * wwdCost;
+
+  const droneCount = +document.getElementById('dfrDroneCount').value || 0;
+  const droneCost = +document.getElementById('dfrDroneCost').value || 0;
+  const dfrPTZ = +document.getElementById('dfrPTZCount').value || 0;
+  const dfrTotal = (droneCount * droneCost) + (dfrPTZ * 5000);
+
+  const ptzCount = +document.getElementById('solarPTZCount').value || 0;
+  const ptzPrice = +document.getElementById('solarPTZPrice').value || 0;
+  const lprCount = +document.getElementById('solarLPRCount').value || 0;
+  const lprPrice = +document.getElementById('solarLPRPrice').value || 0;
+  const solarTotal = (ptzCount * ptzPrice) + (lprCount * lprPrice);
+
+  const grandTotal = taTotal + wwdTotal + dfrTotal + solarTotal;
+
+  let html = `
+    <div class="deal-total">
+      <div class="sub">${agency} — ${state}</div>
+      <div class="amount">${fmtM(grandTotal)}/year</div>
+      <div class="sub">Total Addressable Annual Spend</div>
+    </div>
+
+    <div class="product-summary">
+      <div class="product-summary-item">
+        <div class="prod-name">Traffic Analytics</div>
+        <div class="prod-value">${fmtM(taTotal)}</div>
+        <div class="prod-detail">Platform${usesMS2 ? ' + MS2' : ''}</div>
+      </div>
+      <div class="product-summary-item">
+        <div class="prod-name">Wrong-Way Driving</div>
+        <div class="prod-value">${fmtM(wwdTotal)}</div>
+        <div class="prod-detail">${wwdSites} sites at ${fmt(wwdCost)}/site/yr</div>
+      </div>
+      <div class="product-summary-item">
+        <div class="prod-name">Drone (DFR)</div>
+        <div class="prod-value">${fmtM(dfrTotal)}</div>
+        <div class="prod-detail">${droneCount} drones + ${dfrPTZ} PTZ</div>
+      </div>
+      <div class="product-summary-item">
+        <div class="prod-name">Solar PTZ / LPR</div>
+        <div class="prod-value">${fmtM(solarTotal)}</div>
+        <div class="prod-detail">${ptzCount} PTZ + ${lprCount} LPR</div>
+      </div>
+    </div>
+
+    <div class="talking-points" style="margin-top:1rem;">
+      <h4>Layering Strategy</h4>
+      <ul>
+        <li>Months 1–6: Lead with WWD (${fmtM(wwdTotal)}/yr). Deploy pilot. Prove tech. Generate TA proof points from dual-use data.</li>
+        <li>Months 3–9: Layer TA (${fmtM(taTotal)}/yr). "You're already getting count data from WWD sites. Imagine it across your entire network."</li>
+        <li>Months 6–12: Introduce DFR (${fmtM(dfrTotal)}/yr). With credibility established, position Drone Alpha as next evolution.</li>
+        <li>Full account trajectory: ${fmtM(grandTotal)}/year.</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('summaryContent').innerHTML = html;
+}
+
+function updateAll() {
+  calcTA(); calcWWD(); calcDFR(); calcSolar();
+}
+
+// Initialize all calculations on load
+window.onload = function() {
+  calcTA(); calcWWD(); calcDFR(); calcSolar();
+};
+</script>
+
+</body>
+</html>
